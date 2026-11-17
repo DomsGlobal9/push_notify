@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: push_gateway
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      LOCAL_DB_USER: postgres
+      LOCAL_DB_PASSWORD: postgres
+      LOCAL_DB_HOST: localhost
+      LOG_LEVEL: CRITICAL
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Migrations are complete
+        run: DEBUG=True python manage.py makemigrations --check --dry-run
+      - name: Tests
+        run: python manage.py test --noinput
+      - name: Production static build
+        run: python manage.py collectstatic --noinput
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/push_gateway
+          DJANGO_SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-checks-0123456789
+          MASTER_ENCRYPTION_KEY: Y2ktb25seS1tYXN0ZXIta2V5LTMyLWJ5dGVzLWxvbmch
+
+  flutter-client:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: clients/flutter/push_gateway_client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.38.3"
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test

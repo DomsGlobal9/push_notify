@@ -97,18 +97,21 @@ class CommandTests(TestCase):
         with self.assertRaises(CommandError):
             self.run_cmd("add_app", "T", "android", "com.x", "apple")  # android needs fcm
 
-    def test_ensure_admin_user_is_idempotent(self):
-        os.environ.update(ADMIN_USERNAME="ops", ADMIN_PASSWORD="pw-one-1234")
-        try:
-            self.run_cmd("ensure_admin_user")
-            os.environ["ADMIN_PASSWORD"] = "pw-two-5678"
-            self.run_cmd("ensure_admin_user")
-        finally:
-            os.environ.pop("ADMIN_USERNAME")
-            os.environ.pop("ADMIN_PASSWORD")
+    def test_ensure_admin_user_creates_once_and_never_clobbers(self):
+        from unittest import mock
+        with mock.patch.dict(os.environ, {"ADMIN_USERNAME": "ops", "ADMIN_PASSWORD": "pw-one-1234"}):
+            self.assertIn("Created", self.run_cmd("ensure_admin_user"))
+        with mock.patch.dict(os.environ, {"ADMIN_USERNAME": "ops", "ADMIN_PASSWORD": "pw-two-5678"}):
+            self.assertIn("unchanged", self.run_cmd("ensure_admin_user"))
         self.assertEqual(User.objects.count(), 1)
+        self.assertTrue(User.objects.get().check_password("pw-one-1234"))  # a deploy never resets it
+        with mock.patch.dict(os.environ, {"ADMIN_USERNAME": "ops", "ADMIN_PASSWORD": "pw-two-5678",
+                                          "ADMIN_RESET_PASSWORD": "true"}):
+            self.assertIn("Reset", self.run_cmd("ensure_admin_user"))
         self.assertTrue(User.objects.get().check_password("pw-two-5678"))
-        self.assertIn("skipping", self.run_cmd("ensure_admin_user"))
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("ADMIN_USERNAME", None)
+            self.assertIn("skipping", self.run_cmd("ensure_admin_user"))
 
     def test_run_dispatcher_once_and_purge(self):
         w = World()

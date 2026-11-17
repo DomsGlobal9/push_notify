@@ -180,14 +180,23 @@ See [clients/flutter/push_gateway_client](clients/flutter/push_gateway_client/RE
 
 The database is **Supabase** (project `mobile_push`, Singapore); Render runs only the web service.
 
-1. Render → **New → Blueprint** → pick this repo.
-2. Fill the `sync: false` env vars:
+1. Render → **New → Web Service** → pick this repo, region **Singapore**, instance **Starter**:
+   - Build: `pip install -r requirements.txt && python manage.py collectstatic --noinput`
+   - Pre-deploy: `python manage.py migrate --noinput && python manage.py ensure_admin_user`
+   - Start: `bash bin/start.sh` · Health check path: `/healthz`
+   - Env: `PYTHON_VERSION=3.12.8`, `RUN_DISPATCHER_INLINE=true`, `WEB_CONCURRENCY=2`,
+     `DJANGO_SECRET_KEY` and `ADMIN_API_TOKEN` (Render's *Generate*), plus the ones below.
+
+   (`render.yaml` describes the same service if you prefer **New → Blueprint**.)
+2. Fill the secret env vars:
    - `DATABASE_URL`: Supabase → **Connect** → **Transaction pooler** string (port **6543**), password
      filled in, ending in `?sslmode=require`. (The direct `db.<ref>.supabase.co` host is IPv6-only; Render
      can't reach it.) On port 6543 settings turn off server-side cursors automatically.
    - `MASTER_ENCRYPTION_KEY`: `python -c "import os,base64;print(base64.b64encode(os.urandom(32)).decode())"`.
      **Store a copy in your password manager**; without it stored credentials can't be decrypted.
-   - `ADMIN_USERNAME`, `ADMIN_PASSWORD`: for `/admin/`.
+   - `ADMIN_USERNAME`, `ADMIN_PASSWORD` (optional): creates that admin on deploy **only if it doesn't
+     exist**, so a password changed in `/admin/` survives deploys. `ADMIN_RESET_PASSWORD=true` for one
+     deploy forces the env password.
 3. Every deploy runs `migrate`, which also locks the gateway's tables away from Supabase's public
    Data API (`src/core/supabase.py`: revokes `anon`/`authenticated`, enables RLS).
 4. After the first deploy, open the service **Shell** and run the onboarding commands above. Run them
