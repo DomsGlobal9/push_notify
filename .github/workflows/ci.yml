@@ -40,7 +40,7 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/push_gateway
           DJANGO_SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-checks-0123456789
-          MASTER_ENCRYPTION_KEY: Y2ktb25seS1tYXN0ZXIta2V5LTMyLWJ5dGVzLWxvbmch
+          MASTER_ENCRYPTION_KEY: Y2ktb25seS1tYXN0ZXIta2V5LTMyLWJ5dGVzLWxvbmc=
 
   flutter-client:
     runs-on: ubuntu-latest
