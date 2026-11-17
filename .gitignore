@@ -1,15 +1,49 @@
+# ---- Python ----
 .venv/
+venv/
+env/
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---- Django ----
 staticfiles/
+media/
+db.sqlite3
+*.log
+
+# ---- Environment / secrets (never commit) ----
 .env
 .env.*
-# never commit provider secrets
+!.env.example
 *.p8
+*.pem
+*.key
 *service-account*.json
 *firebase-adminsdk*.json
-.DS_Store
+google-services.json
+GoogleService-Info.plist
+
+# ---- Flutter / Dart client package ----
 .dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
 build/
 pubspec.lock
-!.env.example
+
+# ---- Editors / OS ----
+.idea/
+.vscode/
+*.iml
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---- Claude Code local files ----
+.claude/
