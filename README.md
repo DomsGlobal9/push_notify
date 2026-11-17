@@ -178,12 +178,26 @@ See [clients/flutter/push_gateway_client](clients/flutter/push_gateway_client/RE
 
 ## Deploy on Render
 
-1. Push this repo to GitHub, then Render → **New → Blueprint** → pick the repo.
-2. Fill the `sync: false` env vars: `MASTER_ENCRYPTION_KEY`
-   (`python -c "import os,base64;print(base64.b64encode(os.urandom(32)).decode())"`,
-   **and store a copy in your password manager**), `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
-3. After the first deploy, open the service **Shell** and run the onboarding commands above.
-4. Check `https://<service>.onrender.com/healthz` and sign in at `/admin/`.
+The database is **Supabase** (project `mobile_push`, Singapore); Render runs only the web service.
+
+1. Render → **New → Blueprint** → pick this repo.
+2. Fill the `sync: false` env vars:
+   - `DATABASE_URL`: Supabase → **Connect** → **Transaction pooler** string (port **6543**), password
+     filled in, ending in `?sslmode=require`. (The direct `db.<ref>.supabase.co` host is IPv6-only; Render
+     can't reach it.) On port 6543 settings turn off server-side cursors automatically.
+   - `MASTER_ENCRYPTION_KEY`: `python -c "import os,base64;print(base64.b64encode(os.urandom(32)).decode())"`.
+     **Store a copy in your password manager**; without it stored credentials can't be decrypted.
+   - `ADMIN_USERNAME`, `ADMIN_PASSWORD`: for `/admin/`.
+3. Every deploy runs `migrate`, which also locks the gateway's tables away from Supabase's public
+   Data API (`src/core/supabase.py`: revokes `anon`/`authenticated`, enables RLS).
+4. After the first deploy, open the service **Shell** and run the onboarding commands above. Run them
+   there, not on your laptop, so credentials are encrypted with the production `MASTER_ENCRYPTION_KEY`.
+5. Check `https://<service>.onrender.com/healthz` and sign in at `/admin/`.
+
+Supabase notes: the transaction pooler shares a small pool of real Postgres connections between
+many clients, so adding dispatcher instances later needs no database change. Free
+Supabase projects pause after a week without activity; the dispatcher queries every second, which
+counts as activity, but Supabase Pro ($25/month) removes the risk and adds daily backups.
 
 ## Scaling
 

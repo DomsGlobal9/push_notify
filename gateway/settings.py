@@ -98,6 +98,11 @@ if os.environ.get("DATABASE_URL"):
             os.environ["DATABASE_URL"], conn_max_age=600, conn_health_checks=True
         )
     }
+    # Supabase transaction pooler (port 6543): each transaction may run on a different
+    # server connection, so Django must not hold server-side cursors across them.
+    # The gateway uses no session state (no SET, LISTEN or advisory locks), so it is safe here.
+    if str(DATABASES["default"].get("PORT")) == "6543":
+        DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
 else:
     if not (DEBUG or RUNNING_TESTS):
         raise ImproperlyConfigured("DATABASE_URL is required when DEBUG is off.")

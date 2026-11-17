@@ -1,7 +1,8 @@
 # Render Blueprint for the push gateway.
 #
-# Starting setup (~$14/month): one Starter web service running the API and the
-# dispatcher together + Postgres basic-256mb, in Singapore (closest to India).
+# Starting setup (~$7/month on Render): one Starter web service running the API
+# and the dispatcher together, in Singapore. The database is Supabase (project
+# mobile_push, also Singapore), reached through its session pooler.
 #
 # To scale (see README "Scaling"): uncomment `push-dispatcher` below, set
 # RUN_DISPATCHER_INLINE=false on the web service, and raise the dispatcher's
@@ -20,10 +21,11 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
+      # Supabase -> Connect -> "Transaction pooler" string, port 6543 (IPv4; the direct
+      # db.* host is IPv6-only and unreachable from Render). Must end with ?sslmode=require
+      # e.g. postgresql://postgres.<ref>:<password>@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require
       - key: DATABASE_URL
-        fromDatabase:
-          name: push-gateway-db
-          property: connectionString
+        sync: false
       - key: DJANGO_SECRET_KEY
         generateValue: true
       # 32 random bytes, base64: `python -c "import os,base64;print(base64.b64encode(os.urandom(32)).decode())"`
@@ -56,19 +58,10 @@ services:
   #     - key: PYTHON_VERSION
   #       value: 3.12.8
   #     - key: DATABASE_URL
-  #       fromDatabase:
-  #         name: push-gateway-db
-  #         property: connectionString
+  #       fromService: { type: web, name: push-gateway, envVarKey: DATABASE_URL }
   #     - key: DJANGO_SECRET_KEY
   #       fromService: { type: web, name: push-gateway, envVarKey: DJANGO_SECRET_KEY }
   #     - key: MASTER_ENCRYPTION_KEY
   #       fromService: { type: web, name: push-gateway, envVarKey: MASTER_ENCRYPTION_KEY }
   #     - key: PUSH_SEND_THREADS
   #       value: "64"
-
-databases:
-  - name: push-gateway-db
-    region: singapore
-    plan: basic-256mb
-    databaseName: push_gateway
-    user: push_gateway
