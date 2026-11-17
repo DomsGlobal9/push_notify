@@ -1,0 +1,74 @@
+# Render Blueprint for the push gateway.
+#
+# Starting setup (~$14/month): one Starter web service running the API and the
+# dispatcher together + Postgres basic-256mb, in Singapore (closest to India).
+#
+# To scale (see README "Scaling"): uncomment `push-dispatcher` below, set
+# RUN_DISPATCHER_INLINE=false on the web service, and raise the dispatcher's
+# instance count / plan as volume grows.
+
+services:
+  - type: web
+    name: push-gateway
+    runtime: python
+    region: singapore
+    plan: starter
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    preDeployCommand: python manage.py migrate --noinput && python manage.py ensure_admin_user
+    startCommand: bash bin/start.sh
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DATABASE_URL
+        fromDatabase:
+          name: push-gateway-db
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      # 32 random bytes, base64: `python -c "import os,base64;print(base64.b64encode(os.urandom(32)).decode())"`
+      # BACK IT UP. Losing it makes every stored credential unreadable.
+      - key: MASTER_ENCRYPTION_KEY
+        sync: false
+      - key: ADMIN_API_TOKEN
+        generateValue: true
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: RUN_DISPATCHER_INLINE
+        value: "true"
+      - key: WEB_CONCURRENCY
+        value: "2"
+      - key: PUSH_SEND_THREADS
+        value: "32"
+
+  # --- Scale-out: a dedicated dispatcher (Render Background Worker). ---
+  # - type: worker
+  #   name: push-dispatcher
+  #   runtime: python
+  #   region: singapore
+  #   plan: starter            # standard ($25) for ~1M+ pushes/day
+  #   numInstances: 1          # add instances to send faster; they share the queue
+  #   buildCommand: pip install -r requirements.txt
+  #   startCommand: python manage.py run_dispatcher
+  #   envVars:
+  #     - key: PYTHON_VERSION
+  #       value: 3.12.8
+  #     - key: DATABASE_URL
+  #       fromDatabase:
+  #         name: push-gateway-db
+  #         property: connectionString
+  #     - key: DJANGO_SECRET_KEY
+  #       fromService: { type: web, name: push-gateway, envVarKey: DJANGO_SECRET_KEY }
+  #     - key: MASTER_ENCRYPTION_KEY
+  #       fromService: { type: web, name: push-gateway, envVarKey: MASTER_ENCRYPTION_KEY }
+  #     - key: PUSH_SEND_THREADS
+  #       value: "64"
+
+databases:
+  - name: push-gateway-db
+    region: singapore
+    plan: basic-256mb
+    databaseName: push_gateway
+    user: push_gateway

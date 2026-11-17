@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+staticfiles/
+.env
+.env.*
+# never commit provider secrets
+*.p8
+*service-account*.json
+*firebase-adminsdk*.json
+.DS_Store
+.dart_tool/
+build/
+pubspec.lock
+!.env.example

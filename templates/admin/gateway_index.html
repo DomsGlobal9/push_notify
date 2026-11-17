@@ -1,0 +1,144 @@
+{% extends "admin/base_site.html" %}
+{% load static humanize_lite %}
+
+{% block bodyclass %}{{ block.super }} pg-dashboard{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+<div class="pg">
+
+  <header class="pg-head">
+    <div>
+      <h1>Overview</h1>
+      <p class="pg-sub">All products, last 24 hours unless noted.</p>
+    </div>
+    <div class="pg-head-actions">
+      <a class="pg-btn pg-btn-ghost" href="{% url 'admin:notifications_app_notification_changelist' %}">All notifications</a>
+      <a class="pg-btn" href="{% url 'admin:send-test' %}">Send test notification</a>
+    </div>
+  </header>
+
+  <section class="pg-cards" aria-label="Key numbers">
+    <article class="pg-card">
+      <h2>Active devices</h2>
+      <p class="pg-num">{{ devices.total|compact }}</p>
+      <p class="pg-meta"><span class="pg-dot pg-dot-android"></span>{{ devices.android|compact }} Android
+        <span class="pg-sep">·</span><span class="pg-dot pg-dot-ios"></span>{{ devices.ios|compact }} iOS</p>
+    </article>
+    <article class="pg-card">
+      <h2>Pushes sent</h2>
+      <p class="pg-num">{{ sent_24h|compact }}</p>
+      <p class="pg-meta">{{ last_day.count|default:0 }} notification{{ last_day.count|pluralize }}</p>
+    </article>
+    <article class="pg-card">
+      <h2>Delivered</h2>
+      <p class="pg-num">{% if delivery_rate is not None %}{{ delivery_rate }}<small>%</small>{% else %}–{% endif %}</p>
+      <p class="pg-meta">{{ last_day.invalid|default:0|compact }} dead tokens removed</p>
+    </article>
+    <article class="pg-card">
+      <h2>Opened</h2>
+      <p class="pg-num">{% if open_rate is not None %}{{ open_rate }}<small>%</small>{% else %}–{% endif %}</p>
+      <p class="pg-meta">{{ last_day.opened|default:0|compact }} taps</p>
+    </article>
+    <article class="pg-card pg-queue pg-queue-{{ queue_state }}">
+      <h2>Queue</h2>
+      <p class="pg-num">{{ queue.ready }}<small> ready</small></p>
+      <p class="pg-meta">
+        <span class="pg-status pg-status-{{ queue_state }}">{% if queue_state == "ok" %}Healthy{% elif queue_state == "warn" %}Falling behind{% else %}Needs attention{% endif %}</span>
+        {{ queue.running }} running{% if queue.failed %} · <a href="{% url 'admin:dispatch_app_job_changelist' %}?status__exact=failed">{{ queue.failed }} failed</a>{% endif %}
+      </p>
+    </article>
+  </section>
+
+  <div class="pg-grid">
+    <section class="pg-panel" aria-labelledby="chart-title">
+      <div class="pg-panel-head">
+        <h2 id="chart-title">Last 7 days</h2>
+        <div class="pg-legend"><span><i class="pg-key pg-key-sent"></i>Sent</span><span><i class="pg-key pg-key-failed"></i>Failed or dead</span></div>
+      </div>
+      <div class="pg-chart" role="img" aria-label="Pushes per day for the last 7 days">
+        {% for d in days %}
+        <div class="pg-bar-col" title="{{ d.date }}: {{ d.sent }} sent, {{ d.failed }} failed">
+          <div class="pg-bar">
+            <span class="pg-bar-failed" style="height: {{ d.failed_pct }}%"></span>
+            <span class="pg-bar-sent" style="height: {{ d.sent_pct }}%"></span>
+          </div>
+          <span class="pg-bar-value">{{ d.sent|compact }}</span>
+          <span class="pg-bar-label">{{ d.label }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="pg-panel" aria-labelledby="products-title">
+      <div class="pg-panel-head">
+        <h2 id="products-title">Products</h2>
+        <a href="{% url 'admin:tenants_app_tenant_add' %}" class="pg-link">Add product</a>
+      </div>
+      {% if tenants %}
+      <table class="pg-table">
+        <thead><tr><th>Name</th><th class="num">Apps</th><th class="num">Devices</th><th>Last send</th></tr></thead>
+        <tbody>
+        {% for t in tenants %}
+          <tr>
+            <td><a href="{% url 'admin:tenants_app_tenant_change' t.id %}">{{ t.name }}</a>{% if not t.is_active %} <span class="pg-pill pg-pill-muted">off</span>{% endif %}</td>
+            <td class="num">{{ t.app_count }}</td>
+            <td class="num">{{ t.active_devices|compact }}</td>
+            <td class="pg-muted">{% if t.last_send %}{{ t.last_send|timesince }} ago{% else %}never{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="pg-empty">
+        <p>No products yet.</p>
+        <p class="pg-muted">Add a credential, then a product and its apps, to start sending.</p>
+        <a class="pg-btn" href="{% url 'admin:tenants_app_credential_add' %}">Add a credential</a>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <section class="pg-panel" aria-labelledby="recent-title">
+    <div class="pg-panel-head">
+      <h2 id="recent-title">Recent notifications</h2>
+      <a href="{% url 'admin:notifications_app_notification_changelist' %}" class="pg-link">View all</a>
+    </div>
+    {% if recent %}
+    <div class="pg-table-wrap">
+    <table class="pg-table">
+      <thead><tr><th>Message</th><th>Product</th><th>Status</th><th>Progress</th><th class="num">Sent</th><th class="num">Failed</th><th class="num">Opened</th><th>When</th></tr></thead>
+      <tbody>
+      {% for n in recent %}
+        <tr>
+          <td class="pg-msg"><a href="{% url 'admin:notifications_app_notification_change' n.id %}">{{ n.title_text|truncatechars:48 }}</a></td>
+          <td>{{ n.tenant.name }}</td>
+          <td><span class="pg-pill pg-pill-{{ n.status }}">{{ n.get_status_display }}</span></td>
+          <td><div class="pg-progress" title="{{ n.progress }}%"><span style="width: {{ n.progress }}%"></span></div></td>
+          <td class="num">{{ n.sent_count|compact }}<span class="pg-muted">/{{ n.targeted_count|compact }}</span></td>
+          <td class="num{% if n.failed_count or n.invalid_token_count %} pg-bad{% endif %}">{{ n.failed_count|add:n.invalid_token_count|compact }}</td>
+          <td class="num">{{ n.opened_count|compact }}</td>
+          <td class="pg-muted">{{ n.created_at|timesince }} ago</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="pg-empty"><p>Nothing sent yet.</p><p class="pg-muted">Use “Send test notification” to try a device.</p></div>
+    {% endif %}
+  </section>
+
+  <section class="pg-panel pg-apps" aria-labelledby="manage-title">
+    <div class="pg-panel-head"><h2 id="manage-title">Manage</h2></div>
+    <div class="pg-apps-grid">
+      {% include "admin/app_list.html" with app_list=app_list show_changelinks=False %}
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
