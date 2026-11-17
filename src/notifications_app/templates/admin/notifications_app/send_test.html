@@ -1,10 +1,23 @@
 {% extends "admin/base_site.html" %}
+{% load unfold %}
+
 {% block content %}
-<form method="post">
-  {% csrf_token %}
-  <fieldset class="module aligned">
-    {{ form.as_div }}
-  </fieldset>
-  <div class="submit-row"><input type="submit" class="default" value="Send"></div>
-</form>
+<div class="pg pg-narrow">
+  <header class="pg-head">
+    <div>
+      <h1>Send a test notification</h1>
+      <p class="pg-sub">Goes out through the same queue and providers as real sends.</p>
+    </div>
+  </header>
+  <form method="post" class="pg-panel">
+    {% csrf_token %}
+    {% for field in form %}
+      {% include "unfold/helpers/field.html" with field=field %}
+    {% endfor %}
+    <div class="pg-form-actions">
+      <a class="pg-btn pg-btn-ghost" href="{% url 'admin:notifications_app_notification_changelist' %}">Cancel</a>
+      <button type="submit" class="pg-btn">Send</button>
+    </div>
+  </form>
+</div>
 {% endblock %}

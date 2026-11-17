@@ -20,7 +20,7 @@ class Device(models.Model):
     APNS_ENVIRONMENTS = [(PRODUCTION, "Production"), (SANDBOX, "Sandbox (debug builds)")]
 
     id = models.BigAutoField(primary_key=True)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="devices")
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="devices", verbose_name="product")
     app = models.ForeignKey(App, on_delete=models.CASCADE, related_name="devices")
     installation_id = models.CharField(max_length=128)
     token = models.TextField()

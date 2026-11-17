@@ -7,13 +7,13 @@ land, is the queue healthy, which product is sending what. Everything else
 
 from datetime import timedelta
 
-from django.contrib import admin
 from django.db.models import Count, Max, Q, Sum
 from django.db.models.functions import TruncDate
 from django.utils import timezone
+from unfold.sites import UnfoldAdminSite
 
 
-class GatewayAdminSite(admin.AdminSite):
+class GatewayAdminSite(UnfoldAdminSite):
     site_header = "Push Gateway"
     site_title = "Push Gateway"
     index_title = "Overview"

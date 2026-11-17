@@ -26,11 +26,13 @@ class Tenant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
     identity_secret_enc = models.TextField(editable=False)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField("active", default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["name"]
+        verbose_name = "product"
+        verbose_name_plural = "products"
 
     def __str__(self):
         return self.name
@@ -102,7 +104,7 @@ class App(models.Model):
     PLATFORMS = [(ANDROID, "Android"), (IOS, "iOS")]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="apps")
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="apps", verbose_name="product")
     platform = models.CharField(max_length=8, choices=PLATFORMS)
     bundle_id = models.CharField(max_length=255, help_text="Android package name or iOS bundle id")
     credential = models.ForeignKey(Credential, on_delete=models.PROTECT, related_name="apps")

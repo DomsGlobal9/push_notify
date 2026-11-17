@@ -1,10 +1,8 @@
 {% extends "admin/base_site.html" %}
 {% load static humanize_lite %}
 
-{% block bodyclass %}{{ block.super }} pg-dashboard{% endblock %}
 {% block breadcrumbs %}{% endblock %}
 {% block content_title %}{% endblock %}
-{% block nav-sidebar %}{% endblock %}
 
 {% block content %}
 <div class="pg">
@@ -16,7 +14,7 @@
     </div>
     <div class="pg-head-actions">
       <a class="pg-btn pg-btn-ghost" href="{% url 'admin:notifications_app_notification_changelist' %}">All notifications</a>
-      <a class="pg-btn" href="{% url 'admin:send-test' %}">Send test notification</a>
+      <a class="pg-btn" href="{% url 'admin:notifications_app_notification_send_test' %}">Send test notification</a>
     </div>
   </header>
 
@@ -131,14 +129,7 @@
     {% endif %}
   </section>
 
-  <section class="pg-panel pg-apps" aria-labelledby="manage-title">
-    <div class="pg-panel-head"><h2 id="manage-title">Manage</h2></div>
-    <div class="pg-apps-grid">
-      {% include "admin/app_list.html" with app_list=app_list show_changelinks=False %}
-    </div>
-  </section>
 
 </div>
 {% endblock %}
 
-{% block sidebar %}{% endblock %}

@@ -25,7 +25,7 @@ class Notification(models.Model):
     STATUSES = [(QUEUED, "Queued"), (PROCESSING, "Processing"), (COMPLETED, "Completed"), (CANCELLED, "Cancelled")]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="notifications")
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="notifications", verbose_name="product")
     idempotency_key = models.CharField(max_length=255, null=True, blank=True)
     target = models.JSONField()
     message = models.JSONField()

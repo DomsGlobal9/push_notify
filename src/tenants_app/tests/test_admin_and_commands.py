@@ -157,8 +157,30 @@ class AdminDashboardTests(TestCase):
                     "/admin/notifications_app/notification/send-test/",
                     f"/admin/tenants_app/tenant/{w.tenant.id}/change/",
                     f"/admin/devices_app/device/{Device.objects.get().id}/change/",
-                    f"/admin/notifications_app/notification/{Notification.objects.get().id}/change/"]:
+                    f"/admin/notifications_app/notification/{Notification.objects.get().id}/change/",
+                    f"/admin/tenants_app/credential/{Credential.objects.first().id}/change/",
+                    "/admin/tenants_app/credential/add/", "/admin/tenants_app/tenant/add/",
+                    "/admin/auth/user/", f"/admin/auth/user/{self.admin.id}/change/"]:
             self.assertEqual(self.client.get(url).status_code, 200, url)
+
+    def test_dashboard_shows_the_numbers(self):
+        w = World()
+        w.register("install-dash01")
+        from src.notifications_app import services as ns
+        ns.create(w.tenant, {"all": True}, {"title": "Dashboard check"})
+        html = self.client.get("/admin/").content.decode()
+        for text in ("Overview", "Active devices", "Last 7 days", "Recent notifications", "Dashboard check",
+                     "Example Shop", "gateway/theme.css"):
+            self.assertIn(text, html)
+
+    def test_product_page_buttons_rotate_keys_and_show_secret(self):
+        w = World()
+        r = self.client.get(f"/admin/tenants_app/tenant/{w.tenant.id}/rotate-keys/", follow=True)
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("sk_", r.content.decode())
+        self.assertEqual(w.server.get("/v1/notifications").status_code, 401)  # old keys revoked
+        r = self.client.get(f"/admin/tenants_app/tenant/{w.tenant.id}/identity-secret/", follow=True)
+        self.assertIn(w.secrets["identity_secret"], r.content.decode())
 
     def test_create_tenant_in_admin_issues_keys_once(self):
         r = self.client.post("/admin/tenants_app/tenant/add/", {
@@ -219,10 +241,14 @@ class AdminDashboardTests(TestCase):
     def test_send_test_form_queues(self):
         w = World()
         r = self.client.post("/admin/notifications_app/notification/send-test/",
-                             {"tenant": w.tenant.id, "user_id": "", "title": "Hi", "body": "There"})
+                             {"tenant": w.tenant.id, "user_id": "", "title": "Hi", "body": "There",
+                              "route": "/orders"})
         self.assertEqual(r.status_code, 302)
         n = Notification.objects.get()
-        self.assertEqual((n.target, n.message["title"]), ({"all": True}, "Hi"))
+        self.assertEqual((n.target, n.message["title"], n.message["data"]),
+                         ({"all": True}, "Hi", {"route": "/orders"}))
+        self.assertIn("Send test notification",
+                      self.client.get("/admin/notifications_app/notification/").content.decode())
 
     def test_rotate_keys_action(self):
         w = World()

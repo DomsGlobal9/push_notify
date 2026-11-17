@@ -13,6 +13,8 @@ from pathlib import Path
 
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
+from django.templatetags.static import static
+from django.urls import reverse_lazy
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 RUNNING_TESTS = len(sys.argv) > 1 and sys.argv[1] == "test"
@@ -50,6 +52,11 @@ if os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
     CSRF_TRUSTED_ORIGINS.append(f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}")
 
 INSTALLED_APPS = [
+    # Unfold (modern admin theme) must come before the admin itself. BasicAppConfig
+    # keeps our own GatewayAdminSite (an UnfoldAdminSite) instead of replacing it.
+    "unfold.apps.BasicAppConfig",
+    "unfold.contrib.filters",
+    "unfold.contrib.forms",
     "gateway.apps.GatewayAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -163,6 +170,65 @@ REST_FRAMEWORK = {
 }
 
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+
+
+# ---- dashboard look (django-unfold) ----
+def _admin(name):
+    return reverse_lazy(f"admin:{name}")
+
+
+UNFOLD = {
+    "SITE_TITLE": "Push Gateway",
+    "SITE_HEADER": "Push Gateway",
+    "SITE_SUBHEADER": "Notifications for every app",
+    "SITE_SYMBOL": "notifications_active",
+    "SITE_URL": "/admin/",
+    "SHOW_VIEW_ON_SITE": False,
+    "SHOW_HISTORY": True,
+    "BORDER_RADIUS": "8px",
+    "STYLES": [lambda request: static("gateway/theme.css")],
+    # Tailwind indigo.
+    "COLORS": {
+        "primary": {
+            "50": "oklch(96.2% .018 272.314)", "100": "oklch(93% .034 272.788)",
+            "200": "oklch(87% .065 274.039)", "300": "oklch(78.5% .115 274.713)",
+            "400": "oklch(67.3% .182 276.935)", "500": "oklch(58.5% .233 277.117)",
+            "600": "oklch(51.1% .262 276.966)", "700": "oklch(45.7% .24 277.023)",
+            "800": "oklch(39.8% .195 277.366)", "900": "oklch(35.9% .144 278.697)",
+            "950": "oklch(25.7% .09 281.288)",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": "Monitor",
+                "items": [
+                    {"title": "Overview", "icon": "space_dashboard", "link": _admin("index")},
+                    {"title": "Notifications", "icon": "send",
+                     "link": _admin("notifications_app_notification_changelist")},
+                    {"title": "Devices", "icon": "smartphone", "link": _admin("devices_app_device_changelist")},
+                    {"title": "Queue", "icon": "pending_actions", "link": _admin("dispatch_app_job_changelist")},
+                ],
+            },
+            {
+                "title": "Setup",
+                "items": [
+                    {"title": "Products", "icon": "apps", "link": _admin("tenants_app_tenant_changelist")},
+                    {"title": "Apps", "icon": "install_mobile", "link": _admin("tenants_app_app_changelist")},
+                    {"title": "Credentials", "icon": "key", "link": _admin("tenants_app_credential_changelist")},
+                ],
+            },
+            {
+                "title": "Access",
+                "items": [
+                    {"title": "Admin users", "icon": "manage_accounts", "link": _admin("auth_user_changelist")},
+                ],
+            },
+        ],
+    },
+}
 
 # ---- dispatcher tuning (see src/dispatch_app/dispatcher.py) ----
 PUSH = {
