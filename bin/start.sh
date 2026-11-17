@@ -10,6 +10,13 @@ set -u
 DISPATCHER_PID=""
 WEB_PID=""
 
+# Apply migrations (and the Supabase API lockdown) before serving. This replaces
+# Render's pre-deploy command, which is not offered on every plan/form.
+if [ "${RUN_MIGRATIONS_ON_START:-true}" = "true" ]; then
+  python manage.py migrate --noinput || { echo "migrate failed; not starting" >&2; exit 1; }
+  python manage.py ensure_admin_user || true
+fi
+
 shutdown() {
   [ -n "$WEB_PID" ] && kill -TERM "$WEB_PID" 2>/dev/null
   [ -n "$DISPATCHER_PID" ] && kill -TERM "$DISPATCHER_PID" 2>/dev/null

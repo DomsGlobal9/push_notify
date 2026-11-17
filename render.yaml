@@ -15,7 +15,6 @@ services:
     region: singapore
     plan: starter
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    preDeployCommand: python manage.py migrate --noinput && python manage.py ensure_admin_user
     startCommand: bash bin/start.sh
     healthCheckPath: /healthz
     envVars:

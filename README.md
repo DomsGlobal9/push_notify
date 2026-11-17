@@ -182,8 +182,7 @@ The database is **Supabase** (project `mobile_push`, Singapore); Render runs onl
 
 1. Render → **New → Web Service** → pick this repo, region **Singapore**, instance **Starter**:
    - Build: `pip install -r requirements.txt && python manage.py collectstatic --noinput`
-   - Pre-deploy: `python manage.py migrate --noinput && python manage.py ensure_admin_user`
-   - Start: `bash bin/start.sh` · Health check path: `/healthz`
+   - Start: `bash bin/start.sh` (runs migrations first, then the API and dispatcher) · Health check path: `/healthz`
    - Env: `PYTHON_VERSION=3.12.8`, `RUN_DISPATCHER_INLINE=true`, `WEB_CONCURRENCY=2`,
      `DJANGO_SECRET_KEY` and `ADMIN_API_TOKEN` (Render's *Generate*), plus the ones below.
 
@@ -197,7 +196,7 @@ The database is **Supabase** (project `mobile_push`, Singapore); Render runs onl
    - `ADMIN_USERNAME`, `ADMIN_PASSWORD` (optional): creates that admin on deploy **only if it doesn't
      exist**, so a password changed in `/admin/` survives deploys. `ADMIN_RESET_PASSWORD=true` for one
      deploy forces the env password.
-3. Every deploy runs `migrate`, which also locks the gateway's tables away from Supabase's public
+3. Every start runs `migrate`, which also locks the gateway's tables away from Supabase's public
    Data API (`src/core/supabase.py`: revokes `anon`/`authenticated`, enables RLS).
 4. After the first deploy, open the service **Shell** and run the onboarding commands above. Run them
    there, not on your laptop, so credentials are encrypted with the production `MASTER_ENCRYPTION_KEY`.
