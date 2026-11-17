@@ -1,0 +1,40 @@
+<p>The home page answers one question: <strong>are pushes going out and reaching people?</strong> Numbers
+cover <strong>all products</strong> and the <strong>last 24 hours</strong> unless a card says otherwise.</p>
+
+<h2>The five cards</h2>
+<table class="pg-table">
+  <thead><tr><th>Card</th><th>What it means</th><th>Worry when</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Active devices</strong></td><td>Phones that can receive right now, split Android / iOS.
+      Dead or unregistered phones are not counted.</td><td>It drops suddenly: an app may have stopped registering.</td></tr>
+    <tr><td><strong>Pushes sent</strong></td><td>Pushes Google/Apple accepted in the last 24 h, and how many
+      sends (notifications) produced them.</td><td>Zero while your backend should be sending.</td></tr>
+    <tr><td><strong>Delivered</strong></td><td>Sent ÷ (sent + failed + dead tokens). "Dead tokens removed"
+      counts phones that uninstalled; they are cleaned up automatically.</td><td>Below about 90%: open
+      <a class="pg-link" href="{% url 'admin:help-topic' 'troubleshooting' %}">Troubleshooting</a>.</td></tr>
+    <tr><td><strong>Opened</strong></td><td>Taps ÷ pushes sent. Only counted when the app reports the tap.</td>
+      <td>It is a product metric, not an error signal.</td></tr>
+    <tr><td><strong>Queue</strong></td><td>Work waiting to be done now.
+      <span class="pg-pill pg-pill-completed">Healthy</span> nothing older than 30 s ·
+      <span class="pg-pill pg-pill-queued">Falling behind</span> oldest waiting over 30 s ·
+      <span class="pg-pill pg-pill-cancelled" style="color:var(--pg-bad)">Needs attention</span> over 5 min,
+      or a job failed for good.</td><td>Anything but Healthy for more than a few minutes.
+      <a class="pg-link" href="{% url 'admin:help-topic' 'queue' %}">Queue guide →</a></td></tr>
+  </tbody>
+</table>
+
+<h2>Last 7 days</h2>
+<p>One bar per day: <span class="pg-key pg-key-sent"></span> sent and
+<span class="pg-key pg-key-failed"></span> failed or dead tokens. Hover a bar for the exact numbers.
+A red slice that keeps growing means something is wrong with a credential or an app.</p>
+
+<h2>Products</h2>
+<p>Each product with its number of apps, active devices and when it last sent. "never" right after setup is
+normal. Click a name to open the product, its keys and apps.</p>
+
+<h2>Recent notifications</h2>
+<p>The last 8 sends across all products, with status, a progress bar and counts. Click a message to see its
+details and the failures tab. <strong>Sent</strong> shows <em>sent / targeted</em>.</p>
+
+<div class="pg-callout pg-callout-info"><span class="material-symbols-outlined">refresh</span>
+<div>The page shows a snapshot; reload to refresh. Big broadcasts finish within seconds to minutes depending on size.</div></div>

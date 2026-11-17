@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.html import format_html
+from gateway.help import HelpButtonMixin
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.contrib.filters.admin import RelatedDropdownFilter
 from unfold.decorators import action, display
@@ -40,7 +41,8 @@ class SendTestForm(forms.Form):
 
 
 @admin.register(Notification)
-class NotificationAdmin(ModelAdmin):
+class NotificationAdmin(HelpButtonMixin, ModelAdmin):
+    help_topic = "notifications"
     list_display = ["message_title", "tenant", "status_badge", "progress", "sent", "failures",
                     "opened", "created_at"]
     list_filter = ["status", ("tenant", RelatedDropdownFilter)]
@@ -48,7 +50,7 @@ class NotificationAdmin(ModelAdmin):
     list_filter_submit = True
     readonly_fields = [f.name for f in Notification._meta.fields]
     inlines = [DeliveryFailureInline]
-    actions_list = ["send_test"]
+    actions_list = ["send_test", "how_it_works"]
     list_fullwidth = True
     list_select_related = ["tenant"]
 

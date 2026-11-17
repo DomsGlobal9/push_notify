@@ -1,0 +1,52 @@
+<p>Start from the notification: open it under <a class="pg-link" href="{% url 'admin:notifications_app_notification_changelist' %}">Notifications</a>
+and read the <strong>Failures</strong> tab. Each row's reason matches one line below.</p>
+
+<h2>Failure reasons</h2>
+<table class="pg-table">
+  <thead><tr><th>Reason contains</th><th>Meaning</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td><code>UNREGISTERED</code>, <code>Unregistered</code>, <code>410</code></td><td>The app was uninstalled or its data cleared.</td><td>Nothing: the device is switched off automatically.</td></tr>
+    <tr><td><code>registration token is not a valid</code>, <code>BadDeviceToken</code></td><td>The token is broken or from another project/environment.</td><td>Usually nothing. For iOS, check the build's sandbox/production setting matches.</td></tr>
+    <tr><td><code>SENDER_ID_MISMATCH</code></td><td>The app's <code>google-services.json</code> is from a different Firebase project than the credential.</td><td>Use the file from the credential's project, or point the app at the right credential.</td></tr>
+    <tr><td><code>DeviceTokenNotForTopic</code></td><td>The iOS bundle id here differs from the app's real one.</td><td>Correct the app's bundle id under Apps.</td></tr>
+    <tr><td><code>Service account rejected</code>, <code>invalid_grant</code></td><td>The Firebase key was deleted or is wrong.</td><td>Create a new service account key, replace it under Credentials.</td></tr>
+    <tr><td><code>InvalidProviderToken</code>, <code>Bad .p8 key</code></td><td>Wrong Apple Key ID / Team ID, or the <code>.p8</code> was revoked.</td><td>Re-check the IDs or create a new key, replace it under Credentials.</td></tr>
+    <tr><td><code>PayloadTooLarge</code>, <code>4096</code></td><td>The message is too big.</td><td>Send an id in <code>data</code> and let the app load the rest.</td></tr>
+    <tr><td><code>gave up after 5 attempts</code></td><td>Google/Apple kept answering with temporary errors.</td><td>Usually a short outage; send again later.</td></tr>
+    <tr><td><code>batch … abandoned</code></td><td>A background job crashed repeatedly.</td><td>See <a class="pg-link" href="{% url 'admin:help-topic' 'queue' %}">Queue</a> → Last error.</td></tr>
+  </tbody>
+</table>
+
+<h2>"Sent" but the phone shows nothing</h2>
+<ol class="pg-steps">
+  <li><strong>App open on screen?</strong> Android shows no banner while the app is in front; the app receives it instead. Test with the app in the background.</li>
+  <li><strong>Notifications allowed?</strong> Phone Settings → Apps → the app → Notifications on, and the channel (e.g. "Orders and updates") on.</li>
+  <li><strong>Battery saver killing the app?</strong> vivo / Xiaomi / Oppo / Samsung: allow background activity and autostart for the app.</li>
+  <li><strong>Force stopped?</strong> After "Force stop" Android delivers nothing until the app is opened again. Swiping it away is fine.</li>
+  <li><strong>Do Not Disturb</strong> or focus mode on the phone.</li>
+</ol>
+
+<h2>The phone is not under Devices</h2>
+<ul>
+  <li>The person has not signed in since the push-enabled version was installed: it registers after login.</li>
+  <li>Notification permission denied: Android 13+ and iOS need it.</li>
+  <li>The build has push switched off, or its package name is not registered under <a class="pg-link" href="{% url 'admin:help-topic' 'apps' %}">Apps</a> (watch for <code>.dev</code> / <code>.staging</code> flavors).</li>
+  <li>The phone has no Google Play services (some Huawei phones); those cannot receive FCM.</li>
+</ul>
+
+<h2>Everything is slow or nothing goes out</h2>
+<ul>
+  <li><strong>Queue card not Healthy?</strong> Open <a class="pg-link" href="{% url 'admin:help-topic' 'queue' %}">Queue</a>.</li>
+  <li><strong>Free Render plan asleep?</strong> The uptime monitor must ping <code>/healthz</code> every 5 minutes. A sleeping server wakes in about a minute and then catches up; nothing is lost.</li>
+  <li><strong>Scheduled?</strong> A notification with a future <code>send_at</code> stays Queued until then.</li>
+</ul>
+
+<h2>Backend calls fail</h2>
+<table class="pg-table">
+  <tbody>
+    <tr><td><code>401</code></td><td>Wrong or rotated key: check <code>PUSH_GATEWAY_SECRET_KEY</code>.</td></tr>
+    <tr><td><code>403</code></td><td>A <code>pk_</code> key was used to send, or a user link had a wrong token (identity secret mismatch).</td></tr>
+    <tr><td><code>400</code></td><td>Read <code>details</code> in the answer: it names the field.</td></tr>
+    <tr><td><code>429</code></td><td>Over 600 sends per minute for one product: batch users into one send.</td></tr>
+  </tbody>
+</table>

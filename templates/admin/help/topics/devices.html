@@ -1,0 +1,49 @@
+<p>A <strong>device</strong> is one <em>install</em> of one app on one phone or tablet. The same phone with two of
+your apps is two devices. Devices are created by the apps themselves, never by hand.</p>
+
+<h2>How a phone gets here</h2>
+<ol class="pg-steps">
+  <li>The person installs the app and signs in.</li>
+  <li>The app asks for notification permission (Android 13+ and iOS ask once).</li>
+  <li>The app registers with the gateway using the product's <code>pk_</code> key. It does this on every launch,
+    which keeps the push token fresh.</li>
+  <li>If your backend sends the person's push identity at login, the device is linked to that
+    <strong>user</strong>; otherwise it is <em>anonymous</em> and only gets product-wide pushes.</li>
+</ol>
+
+<h2>The list</h2>
+<table class="pg-table">
+  <thead><tr><th>Column</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Installation id</strong></td><td>A random id the app creates once per install. Push tokens change; this does not.</td></tr>
+    <tr><td><strong>Platform</strong></td><td><span class="pg-pill" style="background:var(--pg-ok-soft);color:var(--pg-ok)">Android</span> or
+      <span class="pg-pill pg-pill-processing">iOS</span></td></tr>
+    <tr><td><strong>User</strong></td><td>Who is signed in on it, or <em>anonymous</em>.</td></tr>
+    <tr><td><strong>Status</strong></td><td>
+      <span class="pg-pill pg-pill-completed">Active</span> can receive ·
+      <span class="pg-pill" style="background:var(--pg-bad-soft);color:var(--pg-bad)">Dead token</span> Google/Apple said the app was uninstalled or the token expired ·
+      <span class="pg-pill pg-pill-queued">Inactive</span> replaced (the same token moved to a reinstall) or switched off</td></tr>
+    <tr><td><strong>App version, last seen</strong></td><td>From the app's last registration.</td></tr>
+  </tbody>
+</table>
+<p>Filter by status, platform, product or APNs environment; search by installation id or user id.</p>
+
+<h2>Common questions</h2>
+<dl class="pg-faq">
+  <dt>My phone is not in the list.</dt>
+  <dd>Sign in to the app (it registers after login), allow notifications, and make sure the build has push
+    switched on. Then reload this page.</dd>
+  <dt>A device shows Dead token.</dt>
+  <dd>The app was uninstalled or its data cleared. Nothing to do: it is skipped from now on. If the person opens
+    the app again it registers as Active.</dd>
+  <dt>Why are there inactive devices with the same user?</dt>
+  <dd>Old installs and reinstalls. They are kept so you can see history; only Active ones receive pushes.</dd>
+  <dt>Sandbox vs Production?</dt>
+  <dd>iPhones running a debug build from Xcode use Apple's sandbox; TestFlight and App Store builds use production.
+    The app reports this itself.</dd>
+  <dt>How do I remove a person's devices (data deletion)?</dt>
+  <dd>Your backend calls <code>DELETE /v1/users/&lt;user id&gt;</code>, or select the devices here and delete them.</dd>
+</dl>
+
+<div class="pg-callout pg-callout-info"><span class="material-symbols-outlined">lock</span>
+<div>Push tokens are visible only on a device's detail page and never through the API.</div></div>

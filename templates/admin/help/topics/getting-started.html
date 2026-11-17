@@ -1,0 +1,58 @@
+<h2>What the Push Gateway does</h2>
+<p>The Push Gateway is <strong>one notification server for all of your apps</strong>. Your apps register their
+phones here, your backends ask it to send, and it delivers to Android through Google (FCM) and to iPhones
+through Apple (APNs). It retries what fails and removes phones that uninstalled.</p>
+
+<div class="pg-flow">
+  <div><span class="material-symbols-outlined">phone_iphone</span><strong>App</strong><span>registers the phone</span></div>
+  <span class="pg-flow-arrow">→</span>
+  <div><span class="material-symbols-outlined">dns</span><strong>Push Gateway</strong><span>stores devices, queues, sends</span></div>
+  <span class="pg-flow-arrow">→</span>
+  <div><span class="material-symbols-outlined">cloud</span><strong>FCM / APNs</strong><span>Google and Apple</span></div>
+  <span class="pg-flow-arrow">→</span>
+  <div><span class="material-symbols-outlined">notifications_active</span><strong>Phone</strong><span>shows the notification</span></div>
+</div>
+
+<p>Your backend (for example CRM-B) never talks to Google or Apple: it calls one URL here.</p>
+
+<h2>From zero to a push on a phone</h2>
+<ol class="pg-steps">
+  <li><strong>Add credentials.</strong> A Firebase service account for Android, an Apple <code>.p8</code> key
+    for iOS. You need each only once, for all apps.
+    <a class="pg-link" href="{% url 'admin:help-topic' 'credentials' %}">How →</a></li>
+  <li><strong>Create a product.</strong> One per app family, for example "SC Boutique". The gateway shows
+    three keys <em>once</em>: copy them somewhere safe.
+    <a class="pg-link" href="{% url 'admin:help-topic' 'products' %}">How →</a></li>
+  <li><strong>Add its apps.</strong> The Android package (<code>com.sc.boutique</code>) and the iOS bundle id,
+    each pointing at a credential.
+    <a class="pg-link" href="{% url 'admin:help-topic' 'apps' %}">How →</a></li>
+  <li><strong>Give the keys to developers.</strong> The <code>pk_</code> key goes in the app, the
+    <code>sk_</code> key and identity secret on the backend only.
+    <a class="pg-link" href="{% url 'admin:help-topic' 'security' %}">Which goes where →</a></li>
+  <li><strong>Connect the app.</strong> Developers add the Flutter package; phones appear under
+    <a class="pg-link" href="{% url 'admin:devices_app_device_changelist' %}">Devices</a> after login.
+    <a class="pg-link" href="{% url 'admin:help-topic' 'app-integration' %}">How →</a></li>
+  <li><strong>Send a test.</strong> <a class="pg-link" href="{% url 'admin:notifications_app_notification_send_test' %}">Send test notification</a>
+    → pick the product → Send. The phone buzzes within seconds.</li>
+</ol>
+
+<div class="pg-callout pg-callout-info">
+  <span class="material-symbols-outlined">lightbulb</span>
+  <div>Every list page has a <strong>How this page works</strong> button at the top that opens its guide.
+    The sidebar's <strong>Help</strong> group is always one click away.</div>
+</div>
+
+<h2>The sidebar at a glance</h2>
+<table class="pg-table">
+  <thead><tr><th>Item</th><th>Use it to</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Overview</strong></td><td>See at a glance whether pushes are going out and landing.</td></tr>
+    <tr><td><strong>Notifications</strong></td><td>Check any send, its counts and failures; send a test.</td></tr>
+    <tr><td><strong>Devices</strong></td><td>Find a phone, see whether it can receive, and why not.</td></tr>
+    <tr><td><strong>Queue</strong></td><td>Watch background work; requeue anything that failed.</td></tr>
+    <tr><td><strong>Products</strong></td><td>Create an app family, get and rotate its keys.</td></tr>
+    <tr><td><strong>Apps</strong></td><td>Register Android packages and iOS bundles.</td></tr>
+    <tr><td><strong>Credentials</strong></td><td>Store the Firebase and Apple keys (encrypted).</td></tr>
+    <tr><td><strong>Admin users</strong></td><td>Manage who can sign in here.</td></tr>
+  </tbody>
+</table>

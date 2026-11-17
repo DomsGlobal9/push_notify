@@ -1,0 +1,55 @@
+<p>Any Flutter app can use the gateway with the <code>push_gateway_client</code> package
+(repo <code>DomsGlobal9/push_notify</code>, folder <code>clients/flutter/push_gateway_client</code>). SC Boutique already does.</p>
+
+<h2>1. Firebase project files</h2>
+<ul>
+  <li><strong>Android</strong>: in the Firebase project of your Firebase credential, Add app → Android with the exact
+    package name, download <code>google-services.json</code> into <code>android/app/</code> (or a flavor folder such as
+    <code>android/app/src/prod/</code>), and apply the <code>com.google.gms.google-services</code> Gradle plugin.</li>
+  <li><strong>iOS</strong>: Add app → iOS, put <code>GoogleService-Info.plist</code> in <code>ios/Runner/</code>, and in Xcode add the
+    <em>Push Notifications</em> and <em>Background Modes → Remote notifications</em> capabilities.</li>
+  <li>Keep both files out of git; copy them onto each build machine.</li>
+</ul>
+
+<h2>2. Packages</h2>
+{% verbatim %}<pre><code>dependencies:
+  firebase_core: ^4.15.2
+  firebase_messaging: ^16.7.1
+  push_gateway_client:
+    git:
+      url: https://github.com/DomsGlobal9/push_notify.git
+      path: clients/flutter/push_gateway_client</code></pre>
+
+<h2>3. Code</h2>
+<pre><code>await Firebase.initializeApp();
+
+final push = PushGateway(const PushGatewayConfig(
+  baseUrl: 'https://push-notify-7upj.onrender.com',
+  publishableKey: 'pk_...',          // the product's publishable key only
+  androidPackage: 'com.example.app',
+  iosBundleId: 'com.example.app',
+));
+
+await push.start();                                  // every launch, after login
+await push.signIn(userId: id, userToken: token);     // when the backend sends them
+push.opened.listen((m) => router.go(m.data['route'] ?? '/'));
+await push.signOut();                                // on logout</code></pre>{% endverbatim %}
+
+<h2>4. Register the app here</h2>
+<p>Add the package / bundle under <a class="pg-link" href="{% url 'admin:help-topic' 'apps' %}">Apps</a> for the product.
+Phones can only register for packages listed there.</p>
+
+<h2>5. Android extras</h2>
+<ul>
+  <li>Create the notification channel your sends use (e.g. <code>orders</code>) at app start.</li>
+  <li>Set a single-colour status-bar icon (<code>com.google.firebase.messaging.default_notification_icon</code>), or Android shows a white square.</li>
+  <li>Some phones (vivo, Xiaomi, Oppo) block background apps: ask people to allow background activity for the app.</li>
+  <li>Each Play upload needs a higher version code than the last one.</li>
+</ul>
+
+<h2>6. Test</h2>
+<ol class="pg-steps">
+  <li>Install on a real phone, sign in, allow notifications.</li>
+  <li>The phone appears under <a class="pg-link" href="{% url 'admin:devices_app_device_changelist' %}">Devices</a>.</li>
+  <li><a class="pg-link" href="{% url 'admin:notifications_app_notification_send_test' %}">Send a test</a> with the app in the background, then tap it.</li>
+</ol>

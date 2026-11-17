@@ -1,0 +1,36 @@
+<p>Pushes reach every user of your apps, so the keys that can send them must never leak. The rule is simple:
+<strong>only the <code>pk_</code> key may ever be inside an app.</strong></p>
+
+<h2>Every secret, where it lives</h2>
+<table class="pg-table">
+  <thead><tr><th>Secret</th><th>Lives in</th><th>If it leaks</th></tr></thead>
+  <tbody>
+    <tr><td><code>sk_</code> secret key</td><td>Backend environment variables</td><td>Someone can push to all your users. Use <strong>Rotate keys</strong> on the product now.</td></tr>
+    <tr><td>Identity secret</td><td>Backend environment variables</td><td>Someone could link their phone to another person's account. Ask a developer to rotate it.</td></tr>
+    <tr><td><code>pk_</code> publishable key</td><td>Inside the app</td><td>Low risk by design: it can only register a phone.</td></tr>
+    <tr><td>Firebase service account JSON</td><td>Encrypted in this database (Credentials)</td><td>Delete the key in Firebase → Service accounts, create a new one, replace it here.</td></tr>
+    <tr><td>Apple <code>.p8</code> key</td><td>Encrypted in this database (Credentials)</td><td>Revoke it in the Apple portal, create a new one, replace it here.</td></tr>
+    <tr><td><code>MASTER_ENCRYPTION_KEY</code></td><td>Render environment + your password manager</td><td>Losing it makes stored credentials unreadable: keep a copy.</td></tr>
+    <tr><td>Database URL / password</td><td>Render environment</td><td>Reset the database password in Supabase and update Render.</td></tr>
+    <tr><td><code>ADMIN_API_TOKEN</code></td><td>Render environment</td><td>Replace it in Render; it is only for scripted setup.</td></tr>
+  </tbody>
+</table>
+
+<h2>Built-in protections</h2>
+<ul>
+  <li>API keys are stored hashed and shown once; provider keys are encrypted (AES-256-GCM).</li>
+  <li>An app key cannot send, list users or read other phones.</li>
+  <li>Linking a phone to a user needs a token signed by your backend, so nobody can receive another person's pushes.</li>
+  <li>Products are fully separated: a key only reaches its own product's data.</li>
+  <li>Push tokens are never returned by the API.</li>
+  <li>The database tables are locked away from Supabase's public API.</li>
+  <li>Tapped pushes can only open in-app screens, never outside links.</li>
+  <li>Sending is rate limited per product.</li>
+</ul>
+
+<h2>Routine</h2>
+<ul>
+  <li>Use strong, unique passwords for admin users and remove people who leave.</li>
+  <li>Never paste keys into chats, tickets or screenshots; if you did, rotate them.</li>
+  <li>Do not commit <code>.env</code> files, service account JSON or <code>.p8</code> files to git.</li>
+</ul>

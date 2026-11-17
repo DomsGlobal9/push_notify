@@ -1,0 +1,38 @@
+<p>Sending happens in the background so your backend gets an answer instantly. The <strong>queue</strong> holds
+that background work as <strong>jobs</strong>. When things are healthy this list is almost always empty: jobs
+are deleted the moment they finish.</p>
+
+<h2>Two kinds of job</h2>
+<table class="pg-table">
+  <thead><tr><th>Kind</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>expand</code></td><td>Works out who a notification goes to, 500 devices at a time, and creates one
+      <code>send_batch</code> per 500. Scheduled sends wait here until their time.</td></tr>
+    <tr><td><code>send_batch</code></td><td>Sends to up to 500 devices at once through Google/Apple and records the results.
+      Phones with temporary errors go into a new <code>send_batch</code> that runs a little later (a retry).</td></tr>
+  </tbody>
+</table>
+
+<h2>Statuses</h2>
+<ul>
+  <li><span class="pg-pill pg-pill-processing">pending</span> waiting for its time (retries and scheduled sends wait on purpose).</li>
+  <li><span class="pg-pill pg-pill-queued">running</span> being worked on now. If the server restarts mid-job,
+    the job goes back to pending automatically after 10 minutes.</li>
+  <li><span class="pg-pill" style="background:var(--pg-bad-soft);color:var(--pg-bad)">failed</span> crashed 5 times in a row
+    and was given up on. Its notification still completes; the affected phones count as failed. <em>Last error</em> says why.</li>
+</ul>
+
+<h2>When something looks stuck</h2>
+<ol class="pg-steps">
+  <li>Check the Overview's <strong>Queue</strong> card. <em>Falling behind</em> during a big broadcast is normal for a minute or two.</li>
+  <li>Many <strong>pending</strong> jobs with times in the past and nothing running: the server was asleep or
+    restarting. On the free Render plan make sure the uptime monitor pings <code>/healthz</code> every 5 minutes.</li>
+  <li>A <strong>failed</strong> job: read <em>Last error</em>. Fix the cause (usually a credential), then select the job →
+    action <strong>Requeue selected jobs now</strong> → Go.</li>
+</ol>
+
+<div class="pg-callout pg-callout-warn"><span class="material-symbols-outlined">warning</span>
+<div>Do not delete pending jobs to "clear" the queue: that drops the pushes they would have sent. To stop a send,
+cancel the notification instead (your backend: <code>POST /v1/notifications/&lt;id&gt;/cancel</code>).</div></div>
+
+<p>Failed jobs are cleaned up automatically after 7 days.</p>

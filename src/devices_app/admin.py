@@ -1,4 +1,5 @@
 from django.contrib import admin
+from gateway.help import HelpButtonMixin
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.contrib.filters.admin import RelatedDropdownFilter
 from unfold.decorators import display
@@ -12,7 +13,9 @@ class DeviceTopicInline(TabularInline):
 
 
 @admin.register(Device)
-class DeviceAdmin(ModelAdmin):
+class DeviceAdmin(HelpButtonMixin, ModelAdmin):
+    help_topic = "devices"
+    actions_list = ["how_it_works"]
     list_display = ["installation_id", "platform_badge", "tenant", "user", "status", "app_version",
                     "last_seen_at"]
     list_filter = ["is_active", "app__platform", ("tenant", RelatedDropdownFilter), "apns_environment"]

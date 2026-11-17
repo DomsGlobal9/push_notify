@@ -1,5 +1,7 @@
 # Push Gateway
 
+> **New here?** [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md) walks through running, deploying, creating every key and onboarding an app. The same operator steps are inside the dashboard under **Help** (`/admin/help/`).
+
 One self-hosted push notification service for all of your Android and iOS apps
 (SC Boutique, CRM-B, and whatever comes next). Your servers call **one API**; the
 gateway keeps track of every device, works out who should receive a message,

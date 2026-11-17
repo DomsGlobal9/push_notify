@@ -1,0 +1,47 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="pg pg-help">
+  <div class="pg-help-layout">
+    <nav class="pg-help-toc" aria-label="Help topics">
+      <a class="pg-help-toc-home" href="{% url 'admin:help' %}">
+        <span class="material-symbols-outlined">menu_book</span> All help
+      </a>
+      {% for group, items in groups.items %}
+        <p class="pg-help-toc-group">{{ group }}</p>
+        {% for t in items %}
+          <a href="{% url 'admin:help-topic' t.slug %}"{% if t.slug == topic.slug %} class="active" aria-current="page"{% endif %}>
+            <span class="material-symbols-outlined">{{ t.icon }}</span>{{ t.title }}
+          </a>
+        {% endfor %}
+      {% endfor %}
+    </nav>
+
+    <article class="pg-help-article">
+      <header class="pg-help-title">
+        <span class="material-symbols-outlined pg-help-icon">{{ topic.icon }}</span>
+        <div>
+          <p class="pg-help-kicker">{{ topic.group }}</p>
+          <h1>{{ topic.title }}</h1>
+          <p class="pg-sub">{{ topic.summary }}</p>
+        </div>
+      </header>
+
+      <div class="pg-prose">
+        {% include content_template %}
+      </div>
+
+      <footer class="pg-help-pager">
+        {% if previous %}
+          <a href="{% url 'admin:help-topic' previous.slug %}"><span class="pg-muted">Previous</span><strong>← {{ previous.title }}</strong></a>
+        {% else %}<span></span>{% endif %}
+        {% if next %}
+          <a class="right" href="{% url 'admin:help-topic' next.slug %}"><span class="pg-muted">Next</span><strong>{{ next.title }} →</strong></a>
+        {% endif %}
+      </footer>
+    </article>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+<p>Every key and file in the push system, in one place. <strong>Bold</strong> = secret: only in a password manager,
+a server's environment, or (encrypted) this dashboard.</p>
+
+<h2>For each new app</h2>
+<table class="pg-table">
+  <thead><tr><th>Key / file</th><th>Where to get it</th><th>Where it goes</th><th>Who needs it</th></tr></thead>
+  <tbody>
+    <tr><td><code>pk_…</code> publishable key</td>
+      <td><a class="pg-link" href="{% url 'admin:tenants_app_tenant_add' %}">Products → Add</a> (shown once).
+        Lost: product → <strong>Rotate keys</strong></td>
+      <td>The app's environment file (e.g. <code>PUSH_GATEWAY_KEY</code> in <code>env/prod.json</code>)</td><td>App developer</td></tr>
+    <tr><td><strong><code>sk_…</code> secret key</strong></td>
+      <td>Same as above (shown once). Lost: <strong>Rotate keys</strong></td>
+      <td>Backend env <code>PUSH_GATEWAY_SECRET_KEY</code></td><td>Backend developer</td></tr>
+    <tr><td><strong>Identity secret</strong></td>
+      <td>Product page → <strong>Show identity secret</strong> (any time)</td>
+      <td>Backend env <code>PUSH_GATEWAY_IDENTITY_SECRET</code></td><td>Backend developer</td></tr>
+    <tr><td>Gateway URL</td><td>Your Render service address, e.g. <code>https://push-notify-7upj.onrender.com</code></td>
+      <td>App env <code>PUSH_GATEWAY_URL</code> and backend env <code>PUSH_GATEWAY_URL</code></td><td>Both</td></tr>
+    <tr><td><code>google-services.json</code></td>
+      <td>Firebase → Project settings → General → Your apps → the Android app → <strong>download</strong></td>
+      <td><code>android/app/</code> or a flavor folder; kept out of git</td><td>App developer</td></tr>
+    <tr><td><code>GoogleService-Info.plist</code></td>
+      <td>Firebase → Project settings → Your apps → the iOS app → <strong>download</strong></td>
+      <td><code>ios/Runner/</code>; kept out of git</td><td>App developer</td></tr>
+  </tbody>
+</table>
+
+<h2>Once, for everything</h2>
+<table class="pg-table">
+  <thead><tr><th>Key / file</th><th>Where to get it</th><th>Where it goes</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Firebase service account JSON</strong></td>
+      <td>Firebase → ⚙️ Project settings → <strong>Service accounts</strong> → <strong>Generate new private key</strong></td>
+      <td><a class="pg-link" href="{% url 'admin:tenants_app_credential_add' %}">Credentials → Add</a> (paste the whole file) + password manager</td></tr>
+    <tr><td><strong>Apple <code>.p8</code> key</strong></td>
+      <td>developer.apple.com → Certificates, Identifiers &amp; Profiles → <strong>Keys → +</strong> → APNs → download (once only)</td>
+      <td>Credentials → Add (paste its text) + password manager</td></tr>
+    <tr><td>Apple Key ID</td><td>The key's page, or the 10 characters in <code>AuthKey_XXXXXXXXXX.p8</code></td><td>Credentials form</td></tr>
+    <tr><td>Apple Team ID</td><td>developer.apple.com → top right, or Membership details</td><td>Credentials form</td></tr>
+  </tbody>
+</table>
+
+<h2>The server itself (Render → Environment)</h2>
+<table class="pg-table">
+  <thead><tr><th>Variable</th><th>How to get it</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><strong><code>DATABASE_URL</code></strong></td><td>Supabase → Connect → <strong>Transaction pooler</strong>, password filled in, add <code>?sslmode=require</code></td><td>Port 6543</td></tr>
+    <tr><td><strong><code>MASTER_ENCRYPTION_KEY</code></strong></td><td>Run <code>python3 -c "import os,base64;print(base64.b64encode(os.urandom(32)).decode())"</code></td>
+      <td>⚠️ Back it up. Changing or losing it makes stored credentials unreadable.</td></tr>
+    <tr><td><strong><code>DJANGO_SECRET_KEY</code></strong></td><td>Render's <strong>Generate</strong> button</td><td>Changing it signs everyone out of this dashboard</td></tr>
+    <tr><td><strong><code>ADMIN_API_TOKEN</code></strong></td><td>Render's <strong>Generate</strong> button</td><td>Only for scripted setup through <code>/admin-api/</code></td></tr>
+    <tr><td><code>PYTHON_VERSION</code>, <code>RUN_DISPATCHER_INLINE</code>, <code>WEB_CONCURRENCY</code></td><td>Fixed values: <code>3.12.8</code>, <code>true</code>, <code>2</code></td><td></td></tr>
+  </tbody>
+</table>
+
+<div class="pg-callout pg-callout-warn"><span class="material-symbols-outlined">key_off</span>
+<div>Only the <code>pk_</code> key and the two Firebase files ever go inside an app. Everything bold stays on servers.
+More in <a class="pg-link" href="{% url 'admin:help-topic' 'security' %}">Keys and security</a>.</div></div>

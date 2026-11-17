@@ -22,6 +22,17 @@ class GatewayAdminSite(UnfoldAdminSite):
     def index(self, request, extra_context=None):
         return super().index(request, {**self._stats(), **(extra_context or {})})
 
+    def get_urls(self):
+        from django.urls import path
+
+        from gateway import help as guide
+
+        return [
+            path("help/", self.admin_view(lambda r: guide.help_index(self, r)), name="help"),
+            path("help/<slug:slug>/", self.admin_view(lambda r, slug: guide.help_topic(self, r, slug)),
+                 name="help-topic"),
+        ] + super().get_urls()
+
     @staticmethod
     def _stats():
         from src.devices_app.models import Device

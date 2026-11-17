@@ -16,6 +16,7 @@ from django.db.models import Count, Q
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
+from gateway.help import HelpButtonMixin
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import action, display
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
@@ -32,7 +33,9 @@ admin.site.unregister(Group)
 
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin, ModelAdmin):
+class UserAdmin(HelpButtonMixin, BaseUserAdmin, ModelAdmin):
+    help_topic = "admin-users"
+    actions_list = ["how_it_works"]
     form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
@@ -70,7 +73,9 @@ class AppInline(TabularInline):
 
 
 @admin.register(Tenant)
-class TenantAdmin(ModelAdmin):
+class TenantAdmin(HelpButtonMixin, ModelAdmin):
+    help_topic = "products"
+    actions_list = ["how_it_works"]
     list_display = ["name", "status", "apps_count", "devices_count", "created_at"]
     search_fields = ["name"]
     fields = ["name", "is_active"]
@@ -190,7 +195,9 @@ class CredentialForm(forms.ModelForm):
 
 
 @admin.register(Credential)
-class CredentialAdmin(ModelAdmin):
+class CredentialAdmin(HelpButtonMixin, ModelAdmin):
+    help_topic = "credentials"
+    actions_list = ["how_it_works"]
     form = CredentialForm
     list_display = ["name", "provider_badge", "summary", "apps_using", "updated_at"]
     fieldsets = [
@@ -233,7 +240,9 @@ class AppForm(forms.ModelForm):
 
 
 @admin.register(App)
-class AppAdmin(ModelAdmin):
+class AppAdmin(HelpButtonMixin, ModelAdmin):
+    help_topic = "apps"
+    actions_list = ["how_it_works"]
     form = AppForm
     list_display = ["bundle_id", "platform_badge", "tenant", "credential", "devices_count", "created_at"]
     list_filter = ["platform", "tenant"]

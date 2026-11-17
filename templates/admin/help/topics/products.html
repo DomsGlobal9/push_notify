@@ -1,0 +1,38 @@
+<p>A <strong>product</strong> is one app family: its Android and iOS apps, its devices, its notifications and its
+keys. "SC Boutique" is a product; a future delivery app would be another. Products never see each other's
+devices or sends.</p>
+
+<h2>Create a product</h2>
+<ol class="pg-steps">
+  <li><a class="pg-link" href="{% url 'admin:tenants_app_tenant_add' %}">Products → Add</a>, type a name, keep <strong>Active</strong> on, <strong>Save</strong>.</li>
+  <li>A yellow box shows <strong>three values, once</strong>. Copy all three now into your password manager. They are never shown again.</li>
+  <li>Add its apps in the <strong>Apps</strong> tab on the product page, or under <a class="pg-link" href="{% url 'admin:help-topic' 'apps' %}">Apps</a>.</li>
+</ol>
+
+<h2>The three keys</h2>
+<table class="pg-table">
+  <thead><tr><th>Key</th><th>Looks like</th><th>Goes in</th><th>Can</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Secret key</strong></td><td><code>sk_…</code></td><td>Your <strong>backend only</strong> (an environment variable)</td>
+      <td>Send to every phone of the product, list and delete users' devices</td></tr>
+    <tr><td><strong>Publishable key</strong></td><td><code>pk_…</code></td><td>The <strong>app</strong> (it is public by design)</td>
+      <td>Only register or remove its own phone and report taps</td></tr>
+    <tr><td><strong>Identity secret</strong></td><td>random text</td><td>Your <strong>backend only</strong></td>
+      <td>Sign a token at login proving a phone belongs to a user</td></tr>
+  </tbody>
+</table>
+<div class="pg-callout pg-callout-warn"><span class="material-symbols-outlined">warning</span>
+<div>Never put the <code>sk_</code> key or identity secret in an app: anyone could extract them and message all your users.</div></div>
+
+<h2>Buttons on a product page</h2>
+<ul>
+  <li><strong>Rotate keys</strong>: creates a new <code>sk_</code> and <code>pk_</code> and <strong>switches the old ones off at once</strong>.
+    Use it if a key leaked. Update the backend and ship an app update with the new <code>pk_</code> first, or
+    those stop working.</li>
+  <li><strong>Show identity secret</strong>: shows it again (it is needed by every backend that links users).</li>
+  <li><strong>Active</strong> switch: turning a product off makes all its keys stop working immediately; devices and history are kept.</li>
+  <li><strong>API keys</strong> tab: every key ever issued, its first characters and when it was revoked.</li>
+  <li><strong>History</strong>: who changed what in this dashboard.</li>
+</ul>
+
+<p>The same actions exist on the product list: tick products → choose an action → Go.</p>

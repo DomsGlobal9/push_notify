@@ -1,0 +1,32 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="pg pg-help">
+  <header class="pg-head">
+    <div>
+      <h1>Help</h1>
+      <p class="pg-sub">How to use every part of the Push Gateway dashboard. New here? Start with
+        <a class="pg-link" href="{% url 'admin:help-topic' 'getting-started' %}">Getting started</a>.</p>
+    </div>
+  </header>
+
+  {% for group, items in groups.items %}
+  <section>
+    <h2 class="pg-help-group">{{ group }}</h2>
+    <div class="pg-help-cards">
+      {% for t in items %}
+      <a class="pg-help-card" href="{% url 'admin:help-topic' t.slug %}">
+        <span class="material-symbols-outlined pg-help-icon">{{ t.icon }}</span>
+        <span>
+          <strong>{{ t.title }}</strong>
+          <span class="pg-muted">{{ t.summary }}</span>
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

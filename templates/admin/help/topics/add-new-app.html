@@ -1,0 +1,91 @@
+<p>This is the full checklist for giving any new app push notifications, for example a future delivery app.
+Do it top to bottom. Parts A and B are needed <strong>only once ever</strong>; skip them if the credentials already exist
+under <a class="pg-link" href="{% url 'admin:tenants_app_credential_changelist' %}">Credentials</a>.</p>
+
+<div class="pg-callout pg-callout-info"><span class="material-symbols-outlined">schedule</span>
+<div>About 30 minutes the first time, 10 minutes for each app after that. You need: the Firebase console, an Apple
+Developer account (for iOS), this dashboard, and a developer for the app and backend parts.</div></div>
+
+<h2>A. Firebase: once, for all Android apps</h2>
+<ol class="pg-steps">
+  <li>Go to <code>console.firebase.google.com</code> → <strong>Add project</strong> (or open the existing one, e.g.
+    <code>server-push-notification-2adb0</code>). Analytics can be off.</li>
+  <li>⚙️ <strong>Project settings</strong> → <strong>Service accounts</strong> → <strong>Generate new private key</strong> →
+    <strong>Generate key</strong>. A <code>.json</code> file downloads: this is the <em>service account key</em>.</li>
+  <li><strong>Cloud Messaging</strong> tab: check <em>Firebase Cloud Messaging API (V1)</em> is <strong>Enabled</strong>.</li>
+  <li>Here: <a class="pg-link" href="{% url 'admin:tenants_app_credential_add' %}">Credentials → Add</a> → name
+    <code>firebase-main</code>, provider <strong>Firebase Cloud Messaging</strong> → open the JSON file in a text editor,
+    copy all of it, paste → <strong>Save</strong>.</li>
+  <li>Save the JSON in your password manager and delete it from Downloads.</li>
+</ol>
+
+<h2>B. Apple: once, for all iOS apps</h2>
+<ol class="pg-steps">
+  <li><code>developer.apple.com</code> → Account → <strong>Certificates, Identifiers &amp; Profiles</strong> → <strong>Keys</strong> → <strong>+</strong>.</li>
+  <li>Name <code>Push Gateway</code>, tick <strong>Apple Push Notifications service (APNs)</strong> (Sandbox &amp; Production) → Continue → Register.</li>
+  <li><strong>Download</strong> <code>AuthKey_XXXXXXXXXX.p8</code>. ⚠️ Only one download is ever allowed: store it in your password manager now.</li>
+  <li>Write down the <strong>Key ID</strong> (10 characters, in the file name) and the <strong>Team ID</strong> (top right of the developer site, or Membership).</li>
+  <li>Here: <a class="pg-link" href="{% url 'admin:tenants_app_credential_add' %}">Credentials → Add</a> → name
+    <code>apple-main</code>, provider <strong>Apple Push Notification service</strong> → Team ID, Key ID, and the whole
+    <code>.p8</code> text including the BEGIN/END lines → <strong>Save</strong>.</li>
+</ol>
+
+<h2>C. Register the new app with Firebase and Apple</h2>
+<ol class="pg-steps">
+  <li><strong>Android</strong>: Firebase → Project settings → General → <strong>Add app</strong> → Android → enter the package name
+    exactly (e.g. <code>com.example.delivery</code>, the <code>applicationId</code>) → <strong>Register</strong> → download
+    <code>google-services.json</code> and hand it to the app developer.</li>
+  <li><strong>iOS</strong>: Firebase → Add app → iOS → bundle id → download <code>GoogleService-Info.plist</code> for the developer.</li>
+  <li><strong>iOS</strong>: Apple Developer → <strong>Identifiers</strong> → the app's bundle id → tick <strong>Push Notifications</strong> → Save.</li>
+</ol>
+
+<h2>D. Create the product here</h2>
+<ol class="pg-steps">
+  <li><a class="pg-link" href="{% url 'admin:tenants_app_tenant_add' %}">Products → Add</a> → name it (e.g. "Delivery App") → <strong>Save</strong>.</li>
+  <li>A yellow box shows <strong>secret_key</strong> (<code>sk_…</code>), <strong>publishable_key</strong> (<code>pk_…</code>) and
+    <strong>identity_secret</strong>. ⚠️ Copy all three into your password manager now; the two keys are never shown again.</li>
+  <li>Lost them? Open the product → <strong>Rotate keys</strong> for new ones (old ones stop working), and
+    <strong>Show identity secret</strong> to see that one again.</li>
+</ol>
+
+<h2>E. Add the product's apps</h2>
+<ol class="pg-steps">
+  <li><a class="pg-link" href="{% url 'admin:tenants_app_app_add' %}">Apps → Add</a> → Product: the new product, Platform:
+    <strong>Android</strong>, Bundle id: the package name, Credential: <code>firebase-main</code>, Android channel id:
+    the channel the app creates (e.g. <code>orders</code>) → Save.</li>
+  <li>Again for <strong>iOS</strong>: Platform iOS, the bundle id, Credential <code>apple-main</code> → Save.</li>
+  <li>Build flavors with other package names (<code>.dev</code>, <code>.staging</code>) each need their own app row if they should receive pushes.</li>
+</ol>
+
+<h2>F. Hand over to developers</h2>
+<table class="pg-table">
+  <thead><tr><th>Who</th><th>Gets</th><th>Where it goes</th></tr></thead>
+  <tbody>
+    <tr><td>App developer</td><td><code>google-services.json</code>, <code>GoogleService-Info.plist</code>, the <code>pk_</code> key, this server's URL</td>
+      <td>The app (Firebase files kept out of git; <code>pk_</code> and URL in the app's environment file)</td></tr>
+    <tr><td>Backend developer</td><td><code>sk_</code> key, identity secret, this server's URL</td>
+      <td>Backend environment variables <code>PUSH_GATEWAY_SECRET_KEY</code>, <code>PUSH_GATEWAY_IDENTITY_SECRET</code>, <code>PUSH_GATEWAY_URL</code></td></tr>
+  </tbody>
+</table>
+<p>Send keys through a password manager share or another private channel, never in group chats or email.
+Developer details: <a class="pg-link" href="{% url 'admin:help-topic' 'app-integration' %}">Connecting a Flutter app</a> and
+<a class="pg-link" href="{% url 'admin:help-topic' 'sending-api' %}">Sending from your backend</a>.</p>
+
+<h2>G. Test</h2>
+<ol class="pg-steps">
+  <li>Install a build on a real phone, sign in, tap <strong>Allow</strong> for notifications.</li>
+  <li>Within a few seconds the phone appears under <a class="pg-link" href="{% url 'admin:devices_app_device_changelist' %}">Devices</a> as <strong>Active</strong>.</li>
+  <li>Put the app in the background, then <a class="pg-link" href="{% url 'admin:notifications_app_notification_send_test' %}">Send test notification</a> → the new product → Send.</li>
+  <li>The phone buzzes; tapping opens the app. The notification here shows <strong>Sent 1/1</strong> and <strong>Opened 1</strong>.</li>
+  <li>Nothing arrived? <a class="pg-link" href="{% url 'admin:help-topic' 'troubleshooting' %}">Troubleshooting</a>.</li>
+</ol>
+
+<h2>H. Before going live</h2>
+<ul>
+  <li>The release build includes the Firebase files and push is switched on in its environment file.</li>
+  <li>Android: status-bar icon is single-colour, the notification channel exists, version code is higher than the last upload.</li>
+  <li>Play Console → <strong>Data safety</strong>: declare "Device or other IDs: collected, for app functionality".</li>
+  <li>App Store (iOS): Push Notifications capability is on in the release build.</li>
+  <li>The backend sends real events (order ready, reminders) and links users at login.</li>
+  <li>An uptime monitor pings <code>/healthz</code> every 5 minutes (free Render plan).</li>
+</ul>

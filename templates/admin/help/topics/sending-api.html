@@ -1,0 +1,104 @@
+<p>Your backend sends by calling the gateway over HTTPS with the product's <strong>secret key</strong>. The call
+returns immediately (status <code>202</code>); delivery happens in the background.</p>
+
+<h2>Setup (once per backend)</h2>
+<table class="pg-table">
+  <thead><tr><th>Environment variable</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td><code>PUSH_GATEWAY_URL</code></td><td>This server's address, e.g. <code>https://push-notify-7upj.onrender.com</code></td></tr>
+    <tr><td><code>PUSH_GATEWAY_SECRET_KEY</code></td><td>The product's <code>sk_…</code> key</td></tr>
+    <tr><td><code>PUSH_GATEWAY_IDENTITY_SECRET</code></td><td>The product's identity secret (only needed to link users)</td></tr>
+  </tbody>
+</table>
+
+<h2>Send</h2>
+{% verbatim %}<pre><code>POST /v1/notifications
+X-API-Key: sk_...
+Idempotency-Key: order-1042-ready        (optional: a retry never sends twice)
+
+{
+  "target":  {"user_ids": ["sarala_boutique:12"]},
+  "message": {
+    "title": "Your order is ready",
+    "body": "Pick it up any time after 4 pm",
+    "data": {"route": "/orders/1042"},
+    "android_channel_id": "orders",
+    "priority": "high",
+    "ttl_seconds": 86400,
+    "collapse_key": "order-1042"
+  },
+  "send_at": "2026-12-01T04:30:00Z"       (optional: schedule it)
+}</code></pre>
+
+<h2>Python example</h2>
+<pre><code>import os, requests
+
+def notify(user_ids, title, body, route=None, key=None):
+    requests.post(
+        f"{os.environ['PUSH_GATEWAY_URL']}/v1/notifications",
+        headers={"X-API-Key": os.environ["PUSH_GATEWAY_SECRET_KEY"],
+                 **({"Idempotency-Key": key} if key else {})},
+        json={"target": {"user_ids": user_ids},
+              "message": {"title": title, "body": body,
+                          "data": {"route": route} if route else {}}},
+        timeout=10)</code></pre>
+
+<h2>Linking users (at login)</h2>
+<pre><code>import hashlib, hmac, os
+
+def push_identity(tenant_id, user_id):
+    push_user_id = f"{tenant_id}:{user_id}"
+    token = hmac.new(os.environ["PUSH_GATEWAY_IDENTITY_SECRET"].encode(),
+                     push_user_id.encode(), hashlib.sha256).hexdigest()
+    return {"push_user_id": push_user_id, "push_user_token": token}</code></pre>{% endverbatim %}
+<p>Return both fields in the login and "who am I" responses; the app passes them to the gateway.</p>
+
+<h2>Who to send to: <code>target</code></h2>
+<table class="pg-table">
+  <thead><tr><th>Field</th><th>Reaches</th></tr></thead>
+  <tbody>
+    <tr><td><code>"user_ids": [...]</code></td><td>Every active phone linked to those users (up to 10,000 per call)</td></tr>
+    <tr><td><code>"topics": [...]</code></td><td>Phones subscribed to any of those topics (each phone once)</td></tr>
+    <tr><td><code>"installation_ids": [...]</code></td><td>Exact installs (handy for testing one phone)</td></tr>
+    <tr><td><code>"all": true</code></td><td>Every active phone of the product</td></tr>
+    <tr><td><code>"platforms"</code>, <code>"bundle_ids"</code></td><td>Optional filters added to any of the above</td></tr>
+  </tbody>
+</table>
+<p>Use exactly one of the first four.</p>
+
+<h2>Message fields</h2>
+<table class="pg-table">
+  <tbody>
+    <tr><td><code>title</code>, <code>body</code></td><td>What people read. Title up to 200 characters.</td></tr>
+    <tr><td><code>data</code></td><td>Text values given to the app. <code>route</code> = in-app screen to open on tap.</td></tr>
+    <tr><td><code>image</code></td><td>Picture URL (Android shows it; iOS needs a notification extension).</td></tr>
+    <tr><td><code>priority</code></td><td><code>high</code> (default, wakes the phone) or <code>normal</code></td></tr>
+    <tr><td><code>ttl_seconds</code></td><td>Give up if undelivered after this (phone offline). Default 1 day; 0 = now or never.</td></tr>
+    <tr><td><code>collapse_key</code></td><td>A newer push with the same key replaces the older one on the phone.</td></tr>
+    <tr><td><code>badge</code>, <code>sound</code>, <code>android_channel_id</code>, <code>content_available</code></td><td>Platform extras</td></tr>
+  </tbody>
+</table>
+<p>Title, body, data and image together must stay under 3,500 bytes (Telugu, Hindi and similar scripts use 3 bytes per letter).</p>
+
+<h2>Other calls</h2>
+<table class="pg-table">
+  <tbody>
+    <tr><td><code>GET /v1/notifications/&lt;id&gt;</code></td><td>Status and counts of one send, with recent failures</td></tr>
+    <tr><td><code>POST /v1/notifications/&lt;id&gt;/cancel</code></td><td>Stop a queued or running send</td></tr>
+    <tr><td><code>GET /v1/users/&lt;user&gt;/devices</code></td><td>A user's phones</td></tr>
+    <tr><td><code>DELETE /v1/users/&lt;user&gt;</code></td><td>Delete a user's devices (account deletion)</td></tr>
+  </tbody>
+</table>
+
+<h2>Answers</h2>
+<p>Errors always look like <code>{"error": "…", "code": "…"}</code>.</p>
+<table class="pg-table">
+  <tbody>
+    <tr><td><code>202</code></td><td>Queued</td></tr>
+    <tr><td><code>200</code></td><td>Same Idempotency-Key as an earlier call: the original is returned, nothing new is sent</td></tr>
+    <tr><td><code>400</code></td><td>Invalid request; <code>details</code> says which field</td></tr>
+    <tr><td><code>401</code></td><td>Missing or wrong key</td></tr>
+    <tr><td><code>403</code></td><td>A <code>pk_</code> key was used to send (only <code>sk_</code> can)</td></tr>
+    <tr><td><code>429</code></td><td>Too many sends: 600 per minute per product</td></tr>
+  </tbody>
+</table>

@@ -226,6 +226,20 @@ UNFOLD = {
                     {"title": "Admin users", "icon": "manage_accounts", "link": _admin("auth_user_changelist")},
                 ],
             },
+            {
+                "title": "Help",
+                "items": [
+                    {"title": "Guide", "icon": "menu_book", "link": _admin("help")},
+                    {"title": "Getting started", "icon": "rocket_launch",
+                     "link": reverse_lazy("admin:help-topic", args=["getting-started"])},
+                    {"title": "Add a new app", "icon": "add_circle",
+                     "link": reverse_lazy("admin:help-topic", args=["add-new-app"])},
+                    {"title": "Where keys come from", "icon": "vpn_key",
+                     "link": reverse_lazy("admin:help-topic", args=["keys"])},
+                    {"title": "Troubleshooting", "icon": "build",
+                     "link": reverse_lazy("admin:help-topic", args=["troubleshooting"])},
+                ],
+            },
         ],
     },
 }

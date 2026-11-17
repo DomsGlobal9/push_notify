@@ -1,0 +1,29 @@
+<p>An <strong>app</strong> tells the gateway which Android package or iOS bundle belongs to a product, and which
+credential delivers to it. Add one app per platform.</p>
+
+<h2>Add an app</h2>
+<ol class="pg-steps">
+  <li><a class="pg-link" href="{% url 'admin:tenants_app_app_add' %}">Apps → Add</a>.</li>
+  <li><strong>Product</strong>: the app family.</li>
+  <li><strong>Platform</strong>: Android or iOS.</li>
+  <li><strong>Bundle id</strong>: exactly as in the store. Android: the package name, e.g. <code>com.sc.boutique</code>
+    (from <code>applicationId</code>). iOS: the bundle identifier from Xcode.</li>
+  <li><strong>Credential</strong>: Android must use a <em>Firebase</em> credential; iOS uses an <em>Apple</em> credential
+    (or Firebase if the app gets its tokens from Firebase on iOS too).</li>
+  <li><strong>Android channel id</strong> (optional): the notification channel used when a send names none, e.g.
+    <code>orders</code>. The app must create that channel; SC Boutique creates <code>orders</code>.</li>
+  <li><strong>Save</strong>.</li>
+</ol>
+
+<h2>Things that trip people up</h2>
+<ul>
+  <li><strong>Build flavors change the package name.</strong> SC Boutique's dev build is <code>com.sc.boutique.dev</code>;
+    only the exact package registered here can register phones.</li>
+  <li>The same bundle id can exist under two products; each product only sees its own.</li>
+  <li>The Firebase project of the credential must contain this Android app (Firebase console → Project settings →
+    Your apps), and the app's <code>google-services.json</code> must come from that same project.</li>
+  <li>For iOS, the Apple key's team must own the bundle id, and Push Notifications must be enabled for it in the
+    Apple Developer portal.</li>
+</ul>
+<p>The list shows how many active devices each app has; zero after release means the app is not registering:
+see <a class="pg-link" href="{% url 'admin:help-topic' 'troubleshooting' %}">Troubleshooting</a>.</p>

@@ -1,0 +1,27 @@
+<p>Admin users are the people who can sign in to <strong>this dashboard</strong>. They are separate from the users of
+your apps (those only exist as user ids on devices).</p>
+
+<h2>Add a person</h2>
+<ol class="pg-steps">
+  <li><a class="pg-link" href="{% url 'admin:auth_user_add' %}">Admin users → Add</a>: username and a strong password → Save.</li>
+  <li>On the next page tick <strong>Staff status</strong> so they can sign in.</li>
+  <li>Either tick <strong>Superuser status</strong> (can do everything) or leave it off and grant only the
+    permissions they need, for example <em>view notification</em> and <em>view device</em> for support staff.</li>
+  <li>Save and send them the dashboard address and their password over a private channel.</li>
+</ol>
+
+<h2>Passwords</h2>
+<ul>
+  <li><strong>Your own</strong>: user menu (bottom of the sidebar) → <strong>Change password</strong>.</li>
+  <li><strong>Someone else's</strong>: open their user → the password section → <strong>Reset password</strong>.</li>
+  <li>Locked out of every account: in Render, set <code>ADMIN_USERNAME</code>, <code>ADMIN_PASSWORD</code> and
+    <code>ADMIN_RESET_PASSWORD=true</code>, deploy once, sign in, then remove those three variables.</li>
+</ul>
+
+<h2>Good practice</h2>
+<ul>
+  <li>One account per person; never share a login.</li>
+  <li>Untick <strong>Active</strong> to remove someone's access while keeping their history.</li>
+  <li>Use long passwords: this dashboard can message every user of every product.</li>
+  <li><strong>History</strong> (top right of any record) shows who changed it and when.</li>
+</ul>

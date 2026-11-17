@@ -1,0 +1,55 @@
+<p>A <strong>notification</strong> is one send request: a message plus who should get it. A broadcast to 50,000
+phones is still <em>one</em> row here; per-phone results are the counters.</p>
+
+<h2>The list</h2>
+<table class="pg-table">
+  <thead><tr><th>Column</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Message</strong></td><td>The title (or body when there is no title). Click to open it.</td></tr>
+    <tr><td><strong>Product</strong></td><td>Which app family sent it.</td></tr>
+    <tr><td><strong>Status</strong></td><td>
+      <span class="pg-pill pg-pill-queued">Queued</span> waiting (or scheduled for later) ·
+      <span class="pg-pill pg-pill-processing">Processing</span> sending now ·
+      <span class="pg-pill pg-pill-completed">Completed</span> every phone has an outcome ·
+      <span class="pg-pill pg-pill-cancelled">Cancelled</span> stopped before finishing</td></tr>
+    <tr><td><strong>Progress</strong></td><td>Share of targeted phones that already have an outcome.</td></tr>
+    <tr><td><strong>Sent</strong></td><td>Accepted by Google/Apple ÷ phones targeted.</td></tr>
+    <tr><td><strong>Failed</strong></td><td>Red when any phone failed or had a dead token. Open the notification to see why.</td></tr>
+    <tr><td><strong>Opened</strong></td><td>How many people tapped it.</td></tr>
+  </tbody>
+</table>
+<p>Use <strong>Filters</strong> (top right) for status and product, and the search box for a title.</p>
+
+<h2>Inside a notification</h2>
+<ul>
+  <li><strong>Target</strong>: who it was for: <code>user_ids</code>, <code>topics</code>,
+    <code>installation_ids</code> or <code>all</code>, optionally narrowed by platform or app.</li>
+  <li><strong>Message</strong>: title, body, data (for example <code>route</code>, the screen to open on tap),
+    image, sound, priority, how long it stays valid (<code>ttl_seconds</code>), <code>collapse_key</code>.</li>
+  <li><strong>Counts</strong>: targeted = sent + failed + invalid token + skipped. <em>Skipped</em> means the
+    phone was unregistered between targeting and sending (normal in small numbers).</li>
+  <li><strong>Failures</strong> tab: one row per failed phone with the reason from Google/Apple. Look each up in
+    <a class="pg-link" href="{% url 'admin:help-topic' 'troubleshooting' %}">Troubleshooting</a>.</li>
+</ul>
+
+<h2>Send a test notification</h2>
+<ol class="pg-steps">
+  <li>Click <strong>Send test notification</strong> (top right of the list, or on the Overview).</li>
+  <li><strong>Product</strong>: which app family.</li>
+  <li><strong>User id</strong>: leave empty to send to <em>every</em> phone of the product, or enter a user id
+    to reach only that person's phones (works once the backend links users).</li>
+  <li><strong>Title</strong> and <strong>Body</strong>: what people see.</li>
+  <li><strong>Open on tap</strong> (optional): an in-app path like <code>/orders</code> or <code>/notifications</code>.</li>
+  <li>Click <strong>Send</strong>. You land on the new notification; it completes within seconds.</li>
+</ol>
+<div class="pg-callout pg-callout-warn"><span class="material-symbols-outlined">warning</span>
+<div>An empty user id reaches <strong>everyone</strong> on that product. Use a clear test title.</div></div>
+
+<h2>Good to know</h2>
+<ul>
+  <li>Notifications cannot be created or edited here except through the test form; real sends come from your backend.</li>
+  <li>Retries are automatic: temporary errors are retried up to 5 times with growing delays.</li>
+  <li>A send sent twice with the same <code>Idempotency-Key</code> only goes out once.</li>
+  <li>Finished notifications are kept <strong>90 days</strong>; failure details <strong>14 days</strong>.</li>
+  <li>Android does not show a banner while the app is open on screen; the app receives the message instead.</li>
+</ul>
