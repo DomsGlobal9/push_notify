@@ -24,6 +24,7 @@
       <p class="pg-num">{{ devices.total|compact }}</p>
       <p class="pg-meta"><span class="pg-dot pg-dot-android"></span>{{ devices.android|compact }} Android
         <span class="pg-sep">·</span><span class="pg-dot pg-dot-ios"></span>{{ devices.ios|compact }} iOS</p>
+      <p class="pg-meta"><a class="pg-link" href="{% url 'admin:devices_app_device_changelist' %}?linked=no&is_active__exact=1" title="Phones not tied to a person receive only broadcasts">{{ devices.linked|compact }} linked to a user</a></p>
     </article>
     <article class="pg-card">
       <h2>Pushes sent</h2>

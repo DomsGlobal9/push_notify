@@ -59,6 +59,17 @@ void main() {
     expect(adapter.requests[1].method, 'DELETE');
   });
 
+  test('registerDevice sends the app version when given', () async {
+    await api.registerDevice(
+      installationId: 'abcdef0123456789',
+      platform: 'android',
+      bundleId: 'com.example.shop',
+      token: 'fcm-token-123',
+      appVersion: '1.0.0 (14)',
+    );
+    expect(adapter.requests.single.data, containsPair('app_version', '1.0.0 (14)'));
+  });
+
   test('updateTopics returns the server list', () async {
     expect(await api.updateTopics('install-1', 'com.example.shop', add: ['offers']), ['offers']);
   });

@@ -79,7 +79,21 @@ class PushGateway {
         s.authorizationStatus == AuthorizationStatus.provisional;
   }
 
-  Future<void> start() async {
+  /// Ask for permission, begin listening, and register this install, keeping
+  /// whichever user was linked before. Prefer [startAs] in an app with sign-in.
+  Future<void> start() => _start();
+
+  /// Like [start], but sets who this install belongs to *before* the first
+  /// registration, so a phone is never briefly linked to the previous person
+  /// (a signed-out session that never called [signOut]). Pass nulls when the
+  /// backend sent no identity: the phone then registers anonymously.
+  Future<void> startAs({String? userId, String? userToken}) async {
+    final hasUser = userId != null && userId.isNotEmpty && userToken != null && userToken.isNotEmpty;
+    await _store.setUser(hasUser ? userId : null, hasUser ? userToken : null);
+    await _start();
+  }
+
+  Future<void> _start() async {
     if (config.requestPermissionOnStart) await requestPermission();
     if (!_started) {
       _started = true;
@@ -164,6 +178,7 @@ class PushGateway {
       userToken: user.userToken,
       locale: PlatformDispatcher.instance.locale.toLanguageTag(),
       timezone: DateTime.now().timeZoneName,
+      appVersion: config.appVersion,
     );
   }
 

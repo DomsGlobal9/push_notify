@@ -22,6 +22,7 @@ class PushGatewayConfig {
     this.iosTransport = IosTransport.apnsDirect,
     this.apnsSandbox = kDebugMode,
     this.requestPermissionOnStart = true,
+    this.appVersion,
   });
 
   /// e.g. https://push-gateway.onrender.com (no trailing slash needed).
@@ -45,4 +46,8 @@ class PushGatewayConfig {
   /// Set false to ask later, at a moment that explains why (better opt-in rates),
   /// then call [PushGateway.requestPermission].
   final bool requestPermissionOnStart;
+
+  /// Shown next to each phone in the gateway dashboard (e.g. "1.0.0 (13)"),
+  /// so you can see who still runs an old build.
+  final String? appVersion;
 }

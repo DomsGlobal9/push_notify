@@ -1,6 +1,6 @@
 name: push_gateway_client
 description: Registers this app install with the self-hosted Push Gateway and reports opens.
-version: 0.1.0
+version: 0.2.0
 publish_to: none
 
 environment:

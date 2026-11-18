@@ -173,6 +173,26 @@ class AdminDashboardTests(TestCase):
                      "Example Shop", "gateway/theme.css"):
             self.assertIn(text, html)
 
+    def test_devices_linked_filter_and_overview_count(self):
+        w = World()
+        w.register("install-anon001")
+        w.register("install-user001", user="u1")
+        html = self.client.get("/admin/").content.decode()
+        self.assertIn("1 linked to a user", html)
+        base = "/admin/devices_app/device/"
+        self.assertIn("install-user001", self.client.get(base + "?linked=yes").content.decode())
+        anon = self.client.get(base + "?linked=no").content.decode()
+        self.assertIn("install-anon001", anon)
+        self.assertNotIn("install-user001", anon)
+
+    def test_password_rules_apply_to_new_admin_users(self):
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError
+        for weak in ("short1", "password123", "1234567890"):
+            with self.assertRaises(ValidationError, msg=weak):
+                validate_password(weak)
+        validate_password("a-long-unusual-passphrase-42")
+
     def test_product_page_buttons_rotate_keys_and_show_secret(self):
         w = World()
         r = self.client.get(f"/admin/tenants_app/tenant/{w.tenant.id}/rotate-keys/", follow=True)

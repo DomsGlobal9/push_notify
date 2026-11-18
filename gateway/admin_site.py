@@ -48,6 +48,7 @@ class GatewayAdminSite(UnfoldAdminSite):
             android=Count("id", filter=Q(app__platform="android")),
             ios=Count("id", filter=Q(app__platform="ios")),
             users=Count("user_external_id", distinct=True),
+            linked=Count("id", filter=Q(user_external_id__isnull=False) & ~Q(user_external_id="")),
         )
 
         last_day = Notification.objects.filter(created_at__gte=day_ago).aggregate(
